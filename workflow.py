@@ -9,7 +9,7 @@ from airflow.models import Variable
 # bar = Variable.get("bar", deserialize_json=True)
 # baz = Variable.get("baz", default_var=None)
 from airflow.operators.bash_operator import BashOperator
-from airflow.operators.sensors import BaseSensorOperator
+# from airflow.operators.sensors import BaseSensorOperator
 from airflow.operators.python_operator import PythonOperator
 from airflow.hooks.mysql_hook import MySqlHook
 from airflow.operators.mysql_operator import MySqlOperator
