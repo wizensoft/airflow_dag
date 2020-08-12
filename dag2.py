@@ -19,6 +19,6 @@ with DAG(DAG_ID, default_args=DEFAULT_ARGS,
        external_dag_id='dag_1',
        external_task_id='task_c',
        allowed_states=['success'],
-       execution_delta=datetime.timedelta(minutes=1))
+       execution_delta=datetime.timedelta(seconds=3))
 
    [task_d, task_c_sensor] >> task_e
