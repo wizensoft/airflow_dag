@@ -13,7 +13,7 @@ from airflow.operators.bash_operator import BashOperator
 from airflow.operators.python_operator import PythonOperator
 from airflow.hooks.mysql_hook import MySqlHook
 from airflow.operators.mysql_operator import MySqlOperator
-from airflow.sensors import WorkflowSensor
+from wizen_plugin.sensors.workflow_sensors import WorkflowSensor
 from datetime import datetime, timedelta
 from airflow.utils.helpers import chain
 
