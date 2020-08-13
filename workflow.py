@@ -687,73 +687,73 @@ with models.DAG("workflow", default_args=default_args, schedule_interval=timedel
     wf_sensor = WorkflowSensor(task_id='wf_sensor_task', poke_interval=3, dag=dag)
     # Start workflow    
     wf_start = PythonOperator(task_id=WORKFLOW_START_TASK, python_callable=get_workflow, provide_context=True, dag=dag)
-    # Status get
-    wf_status = BashOperator(task_id='wf_status_task',bash_command='echo wf_status get',dag=dag)
-    # End workflow    
-    wf_end = BashOperator(task_id='wf_end_task',bash_command='echo wf_end ',dag=dag)
+    # # Status get
+    # wf_status = BashOperator(task_id='wf_status_task',bash_command='echo wf_status get',dag=dag)
+    # # End workflow    
+    # wf_end = BashOperator(task_id='wf_end_task',bash_command='echo wf_end ',dag=dag)
 
-    # instances
-    instances = PythonOperator(task_id=INSTANCE_TASK,python_callable=get_instance, provide_context=True, dag=dag)
+    # # instances
+    # instances = PythonOperator(task_id=INSTANCE_TASK,python_callable=get_instance, provide_context=True, dag=dag)
 
-    # Settings
-    settings = PythonOperator(task_id='settings_task',python_callable=get_settings, provide_context=True, dag=dag)
+    # # Settings
+    # settings = PythonOperator(task_id='settings_task',python_callable=get_settings, provide_context=True, dag=dag)
 
-    # Status: 상태
-    status = PythonOperator(task_id='status_task',python_callable=branch_status, provide_context=True, dag=dag)
-    # 00: 기안
-    status_00 = PythonOperator(task_id='status_00_task',python_callable=get_status_00, provide_context=True, dag=dag)
-    # 01: 현결재 true || false
-    status_01 = BashOperator(task_id='status_01_task',bash_command='echo get status 현결재 true || false',dag=dag)
+    # # Status: 상태
+    # status = PythonOperator(task_id='status_task',python_callable=branch_status, provide_context=True, dag=dag)
+    # # 00: 기안
+    # status_00 = PythonOperator(task_id='status_00_task',python_callable=get_status_00, provide_context=True, dag=dag)
+    # # 01: 현결재 true || false
+    # status_01 = BashOperator(task_id='status_01_task',bash_command='echo get status 현결재 true || false',dag=dag)
 
-    # Area: 결재영역
-    area = BashOperator(task_id='area_task', bash_command='echo get area', dag=dag)
-    # 00: 기안회수
-    area_00 = BashOperator(task_id='area_00_task', bash_command='echo get area_00 기안회수', dag=dag)    
-    # 01: 일반결재
-    area_01 = BashOperator(task_id='area_01_task', bash_command='echo get area_01 일반결재', dag=dag)
-    # 02: 수신결재
-    area_02 = BashOperator(task_id='area_02_task', bash_command='echo get area_02 수신결재', dag=dag)
-    # 03: 부서합의
-    area_03 = BashOperator(task_id='area_03_task', bash_command='echo get area_03 부서합의', dag=dag)
+    # # Area: 결재영역
+    # area = BashOperator(task_id='area_task', bash_command='echo get area', dag=dag)
+    # # 00: 기안회수
+    # area_00 = BashOperator(task_id='area_00_task', bash_command='echo get area_00 기안회수', dag=dag)    
+    # # 01: 일반결재
+    # area_01 = BashOperator(task_id='area_01_task', bash_command='echo get area_01 일반결재', dag=dag)
+    # # 02: 수신결재
+    # area_02 = BashOperator(task_id='area_02_task', bash_command='echo get area_02 수신결재', dag=dag)
+    # # 03: 부서합의
+    # area_03 = BashOperator(task_id='area_03_task', bash_command='echo get area_03 부서합의', dag=dag)
 
-    # Section: 결재구분
-    section = BashOperator(task_id='section_task', bash_command='echo get section 결재구분', dag=dag)
-    # 00: 기안결재
-    section_00 = BashOperator(task_id='section_00_task', bash_command='echo get section_00 기안결재', dag=dag)
-    # 01: 일반결재
-    section_01 = BashOperator(task_id='section_01_task', bash_command='echo get section_01 일반결재', dag=dag)
-    # 02: 병렬합의
-    section_02 = BashOperator(task_id='section_02_task', bash_command='echo get section_02 병렬합의', dag=dag)
-    # 03: 순차합의
-    section_03 = BashOperator(task_id='section_03_task', bash_command='echo get section_03 순차합의', dag=dag)
+    # # Section: 결재구분
+    # section = BashOperator(task_id='section_task', bash_command='echo get section 결재구분', dag=dag)
+    # # 00: 기안결재
+    # section_00 = BashOperator(task_id='section_00_task', bash_command='echo get section_00 기안결재', dag=dag)
+    # # 01: 일반결재
+    # section_01 = BashOperator(task_id='section_01_task', bash_command='echo get section_01 일반결재', dag=dag)
+    # # 02: 병렬합의
+    # section_02 = BashOperator(task_id='section_02_task', bash_command='echo get section_02 병렬합의', dag=dag)
+    # # 03: 순차합의
+    # section_03 = BashOperator(task_id='section_03_task', bash_command='echo get section_03 순차합의', dag=dag)
 
-    # Process: 결재 프로세스 처리(결재선 & 결재함)
-    process = BashOperator(task_id='process_task', bash_command='echo get process 결재 프로세스 처리(결재선 & 결재함)', dag=dag)
+    # # Process: 결재 프로세스 처리(결재선 & 결재함)
+    # process = BashOperator(task_id='process_task', bash_command='echo get process 결재 프로세스 처리(결재선 & 결재함)', dag=dag)
 
-    # Event: 결재 이벤트 처리
-    event = BashOperator(task_id='event_task', bash_command='echo get event 결재 이벤트 처리', dag=dag)
-    # 00: 진행중
-    event_00 = BashOperator(task_id='event_00_task', bash_command='echo get event_00 진행중 이벤트 처리', dag=dag)
-    # 01: 완료
-    event_01 = BashOperator(task_id='event_01_task', bash_command='echo get event_01 완료 이벤트 처리', dag=dag)
+    # # Event: 결재 이벤트 처리
+    # event = BashOperator(task_id='event_task', bash_command='echo get event 결재 이벤트 처리', dag=dag)
+    # # 00: 진행중
+    # event_00 = BashOperator(task_id='event_00_task', bash_command='echo get event_00 진행중 이벤트 처리', dag=dag)
+    # # 01: 완료
+    # event_01 = BashOperator(task_id='event_01_task', bash_command='echo get event_01 완료 이벤트 처리', dag=dag)
 
-    # Notify: 알림 이벤트 처리
-    notify = BashOperator(task_id='notify_task', bash_command='echo get notify 알림 이벤트 처리', dag=dag)
-    # 00: 이메일
-    notify_00 = BashOperator(task_id='notify_00_task', bash_command='echo get notify_00 이메일 알림 처리', dag=dag)
-    # 01: 쪽지
-    notify_01 = BashOperator(task_id='notify_01_task', bash_command='echo get notify_01 쪽지 알림 처리', dag=dag)
-    # 02: 모바일
-    notify_02 = BashOperator(task_id='notify_02_task', bash_command='echo get notify_02 모바일 알림 처리', dag=dag)
+    # # Notify: 알림 이벤트 처리
+    # notify = BashOperator(task_id='notify_task', bash_command='echo get notify 알림 이벤트 처리', dag=dag)
+    # # 00: 이메일
+    # notify_00 = BashOperator(task_id='notify_00_task', bash_command='echo get notify_00 이메일 알림 처리', dag=dag)
+    # # 01: 쪽지
+    # notify_01 = BashOperator(task_id='notify_01_task', bash_command='echo get notify_01 쪽지 알림 처리', dag=dag)
+    # # 02: 모바일
+    # notify_02 = BashOperator(task_id='notify_02_task', bash_command='echo get notify_02 모바일 알림 처리', dag=dag)
 
-    # Doc: 문서발번
-    doc = BashOperator(task_id='doc_task', bash_command='echo get doc 문서발번 처리', dag=dag)
+    # # Doc: 문서발번
+    # doc = BashOperator(task_id='doc_task', bash_command='echo get doc 문서발번 처리', dag=dag)
 
-    # Auth: 권한처리
-    # auth = BashOperator(task_id='auth_task', bash_command='echo get auth 권한 처리', dag=dag)
+    # # Auth: 권한처리
+    # # auth = BashOperator(task_id='auth_task', bash_command='echo get auth 권한 처리', dag=dag)
 
-    # Complete: 완료처리
-    complete = BashOperator(task_id='complete_task', bash_command='echo get complete 완료처리', dag=dag)
+    # # Complete: 완료처리
+    # complete = BashOperator(task_id='complete_task', bash_command='echo get complete 완료처리', dag=dag)
 
 
     ##
