@@ -69,12 +69,6 @@ def get_workflow(**context):
     if wfp:
         for row in wfp:
             logging.info(f'wfp row {row}')
-            sql = f"""
-            update workflow_process
-                set ready = 0, bookmark = 'start'
-            where workflow_process_id = %s
-            """
-            db.run(sql, autocommit=True, parameters=[row['workflow_process_id']])
     else:
         logging.info(f'WORKFLOW_PROCESS data is empty')
 
@@ -764,16 +758,16 @@ with models.DAG("workflow", default_args=default_args, schedule_interval=timedel
 
     ##
     # Workflow Start
-    wf_sensor >> wf_start >> instances >> settings >> status
-    # 결재중이 아니면 완료 처리
-    instances >> complete
+    wf_sensor >> wf_start #>> instances >> settings >> status
+    # # 결재중이 아니면 완료 처리
+    # instances >> complete
     
-    # 결재상태
-    status >> status_00 >> section
-    status >> status_01
+    # # 결재상태
+    # status >> status_00 >> section
+    # status >> status_01
 
-    # 결재영역 >> 결재구분 >> 결재 프로세스 >> 결재 이벤트
-    status_01 >> area >> [area_00, area_01, area_02, area_03] >> section >> [section_00, section_01, section_02, section_03] >> process >> event
+    # # 결재영역 >> 결재구분 >> 결재 프로세스 >> 결재 이벤트
+    # status_01 >> area >> [area_00, area_01, area_02, area_03] >> section >> [section_00, section_01, section_02, section_03] >> process >> event
 
-    # 결재 이벤트 >> 대상자 알림 >> 결재 엔진 상태 종료
-    event >> [event_00, event_01] >> complete >> doc >> notify >> [notify_00, notify_01, notify_02] >> wf_end
+    # # 결재 이벤트 >> 대상자 알림 >> 결재 엔진 상태 종료
+    # event >> [event_00, event_01] >> complete >> doc >> notify >> [notify_00, notify_01, notify_02] >> wf_end
