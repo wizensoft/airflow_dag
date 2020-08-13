@@ -20,7 +20,7 @@ from airflow.utils.helpers import chain
 default_args = {
     'owner': 'annguk',
     'depends_on_past': False,
-    # 'start_date': datetime(2020, 1, 1),
+    'start_date': datetime(2020, 8, 1),
     'email': ['koreablaster@wizensoft.com'],
     'email_on_failure': False,
     'email_on_retry': False,
