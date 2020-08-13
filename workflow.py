@@ -17,10 +17,12 @@ from wizen_plugin.sensors.workflow_sensors import WorkflowSensor
 from datetime import datetime, timedelta
 from airflow.utils.helpers import chain
 
+# 스케줄 1분
+SCHEDULE_INTERVAL = 1
 default_args = {
     'owner': 'annguk',
     'depends_on_past': False,
-    'start_date': datetime(2020, 8, 1),
+    'start_date': datetime(2020, 8, 1, 1, 25),
     'email': ['koreablaster@wizensoft.com'],
     'email_on_failure': False,
     'email_on_retry': False,
@@ -686,7 +688,7 @@ def get_status_00(**context):
     # set_sign_activity(instance_id, ET.tostring(root), context)
     return "annguk"
 
-with models.DAG("workflow", default_args=default_args, schedule_interval=timedelta(seconds=5)) as dag:
+with models.DAG("workflow", default_args=default_args, schedule_interval=timedelta(minutes=SCHEDULE_INTERVAL)) as dag:
     # Watch workflow process
     wf_sensor = WorkflowSensor(task_id='wf_sensor_task', poke_interval=3, dag=dag)
     # Start workflow    
