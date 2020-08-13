@@ -18,11 +18,11 @@ from datetime import datetime, timedelta
 from airflow.utils.helpers import chain
 
 # 스케줄 1분
-SCHEDULE_INTERVAL = 10
+SCHEDULE_INTERVAL = 5
 default_args = {
     'owner': 'annguk',
     'depends_on_past': False,
-    'start_date': datetime(2020, 8, 13, 2, 30),
+    'start_date': datetime(2020, 8, 13, 2, 40),
     'email': ['koreablaster@wizensoft.com'],
     'email_on_failure': False,
     'email_on_retry': False,
