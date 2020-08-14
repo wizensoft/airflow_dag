@@ -13,6 +13,7 @@ from airflow.operators.bash_operator import BashOperator
 from airflow.operators.python_operator import PythonOperator
 from airflow.hooks.mysql_hook import MySqlHook
 from airflow.operators.mysql_operator import MySqlOperator
+from airflow.sensors.external_task_sensor import ExternalTaskSensor
 from wizen_plugin.sensors.workflow_sensors import WorkflowSensor
 from datetime import datetime, timedelta
 from airflow.utils.helpers import chain
@@ -22,12 +23,12 @@ SCHEDULE_INTERVAL = 5
 default_args = {
     'owner': 'annguk',
     'depends_on_past': False,
-    'start_date': datetime(2020, 8, 13, 3, 00),
+    'start_date': datetime(2020, 8, 14),
     'email': ['koreablaster@wizensoft.com'],
     'email_on_failure': False,
     'email_on_retry': False,
-    'retries': 1,
-    'retry_delay': timedelta(minutes=1)
+    # 'retries': 1,
+    # 'retry_delay': timedelta(minutes=1)
 }
 GLOBALS = 1 # 공통
 APPLICATION = 2 # 결재
@@ -682,9 +683,18 @@ def get_status_00(**context):
     # set_sign_activity(instance_id, ET.tostring(root), context)
     return "annguk"
 
-with models.DAG("workflow", default_args=default_args, schedule_interval=timedelta(minutes=SCHEDULE_INTERVAL)) as dag:
+with models.DAG("workflow", default_args=default_args, schedule_interval='* * * * *') as dag:
     # Watch workflow process
-    wf_sensor = WorkflowSensor(task_id='wf_sensor_task', poke_interval=3, dag=dag)
+    # wf_sensor = ExternalTaskSensor(
+    #     task_id='wf_sensor_task',
+    #     retries=100,
+    #     retry_delay=timedelta(seconds=30),
+    #     mode='reschedule',
+    #     external_dag_id='workflow_sensor',
+    #     external_task_id='start_task',
+    #     dag=dag
+    # )    
+    wf_sensor = WorkflowSensor(task_id='wf_sensor_task', poke_interval=1, mode='reschedule', retry_delay=timedelta(seconds=1), dag=dag)
     # Start workflow    
     wf_start = PythonOperator(task_id=WORKFLOW_START_TASK, python_callable=get_workflow, provide_context=True, dag=dag)
     # # Status get
