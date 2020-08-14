@@ -694,7 +694,7 @@ with models.DAG("workflow", default_args=default_args, schedule_interval='* * * 
     #     external_task_id='start_task',
     #     dag=dag
     # )    
-    wf_sensor = WorkflowSensor(task_id='wf_sensor_task', poke_interval=1, mode='reschedule', retry_delay=timedelta(seconds=1), dag=dag)
+    wf_sensor = WorkflowSensor(task_id='wf_sensor_task', poke_interval=3, mode='reschedule', retry_delay=timedelta(seconds=1), dag=dag)
     # Start workflow    
     wf_start = PythonOperator(task_id=WORKFLOW_START_TASK, python_callable=get_workflow, provide_context=True, dag=dag)
     # # Status get
