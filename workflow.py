@@ -66,59 +66,59 @@ STATUS_05 = '05'
 # WF 마스터 정보
 def get_workflow(**context):
     db = MySqlHook(mysql_conn_id='mariadb', schema="djob")
-    wfp = context['ti'].xcom_pull(task_ids='wf_sensor_task', key=WORKFLOW_PROCESS)
-    if wfp:
-        for row in wfp:
-            logging.info(f'wfp row {row}')
-    else:
-        logging.info(f'WORKFLOW_PROCESS data is empty')
+    # wfp = context['ti'].xcom_pull(task_ids='wf_sensor_task', key=WORKFLOW_PROCESS)
+    # if wfp:
+    #     for row in wfp:
+    #         logging.info(f'wfp row {row}')
+    # else:
+    #     logging.info(f'WORKFLOW_PROCESS data is empty')
 
-    # sql = """
-    # select
-    #     workflow_process_id,ngen,site_id,application_id,instance_id,schema_id,name,workflow_instance_id,state,retry_count,ready,
-    #     execute_date,created_date,bookmark,version,request,reserved,message
-    # from
-    #     workflow_process
-    # where 
-    #     ready > 0 and retry_count < 10
-    # limit 1
-    # """
-    # task = {}
-    # rows = db.get_records(sql)
-    # for row in rows:
-    #     model = {
-    #         'workflow_process_id':row[0],
-    #         'ngen':row[1],
-    #         'site_id':row[2],
-    #         'application_id':row[3],
-    #         'instance_id':row[4],
-    #         'schema_id':row[5],
-    #         'name':row[6],
-    #         'workflow_instance_id':row[7],
-    #         'state':row[8],
-    #         'retry_count':row[9],
-    #         'ready':row[10],
-    #         'execute_date':str(row[11]),
-    #         'created_date':str(row[12]),
-    #         'bookmark':row[13],
-    #         'version':row[14],
-    #         'request':row[15],
-    #         'reserved':row[16],
-    #         'message':row[17]
-    #     }
-    #     task = model
+    sql = """
+    select
+        workflow_process_id,ngen,site_id,application_id,instance_id,schema_id,name,workflow_instance_id,state,retry_count,ready,
+        execute_date,created_date,bookmark,version,request,reserved,message
+    from
+        workflow_process
+    where 
+        ready > 0 and retry_count < 10
+    limit 1
+    """
+    task = {}
+    rows = db.get_records(sql)
+    for row in rows:
+        model = {
+            'workflow_process_id':row[0],
+            'ngen':row[1],
+            'site_id':row[2],
+            'application_id':row[3],
+            'instance_id':row[4],
+            'schema_id':row[5],
+            'name':row[6],
+            'workflow_instance_id':row[7],
+            'state':row[8],
+            'retry_count':row[9],
+            'ready':row[10],
+            'execute_date':str(row[11]),
+            'created_date':str(row[12]),
+            'bookmark':row[13],
+            'version':row[14],
+            'request':row[15],
+            'reserved':row[16],
+            'message':row[17]
+        }
+        task = model
 
-    # # 객체가 있는 경우 처리
-    # if task != {}:
-    #     context['ti'].xcom_push(key=WORKFLOWS, value=task)
-    #     sql = f"""
-    #     update workflow_process
-    #         set ready = 0, bookmark = 'start'
-    #     where workflow_process_id = %s
-    #     """
-    #     db.run(sql, autocommit=True, parameters=[task['workflow_process_id']])
+    # 객체가 있는 경우 처리
+    if task != {}:
+        context['ti'].xcom_push(key=WORKFLOWS, value=task)
+        sql = f"""
+        update workflow_process
+            set ready = 0, bookmark = 'start'
+        where workflow_process_id = %s
+        """
+        db.run(sql, autocommit=True, parameters=[task['workflow_process_id']])
 
-    # return task
+    return task
     
 def start_workflow():
     db = MySqlHook(mysql_conn_id='mariadb', schema="djob")
@@ -683,7 +683,7 @@ def get_status_00(**context):
     # set_sign_activity(instance_id, ET.tostring(root), context)
     return "annguk"
 
-with models.DAG("workflow", default_args=default_args, schedule_interval='* * * * *') as dag:
+with models.DAG("workflow", default_args=default_args, schedule_interval=timedelta(seconds=3)) as dag:
     # Watch workflow process
     # wf_sensor = ExternalTaskSensor(
     #     task_id='wf_sensor_task',
@@ -694,7 +694,7 @@ with models.DAG("workflow", default_args=default_args, schedule_interval='* * * 
     #     external_task_id='start_task',
     #     dag=dag
     # )    
-    wf_sensor = WorkflowSensor(task_id='wf_sensor_task', poke_interval=3, mode='reschedule', retry_delay=timedelta(seconds=1), dag=dag)
+    # wf_sensor = WorkflowSensor(task_id='wf_sensor_task', poke_interval=3, mode='reschedule', retry_delay=timedelta(seconds=1), dag=dag)
     # Start workflow    
     wf_start = PythonOperator(task_id=WORKFLOW_START_TASK, python_callable=get_workflow, provide_context=True, dag=dag)
     # # Status get
@@ -768,7 +768,7 @@ with models.DAG("workflow", default_args=default_args, schedule_interval='* * * 
 
     ##
     # Workflow Start
-    wf_sensor >> wf_start #>> instances >> settings >> status
+    wf_start #>> instances >> settings >> status
     # # 결재중이 아니면 완료 처리
     # instances >> complete
     
