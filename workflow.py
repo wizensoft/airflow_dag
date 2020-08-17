@@ -14,7 +14,7 @@ from airflow.operators.python_operator import PythonOperator
 from airflow.hooks.mysql_hook import MySqlHook
 from airflow.operators.mysql_operator import MySqlOperator
 from airflow.sensors.external_task_sensor import ExternalTaskSensor
-from wizen_plugin.sensors.workflow_sensors import WorkflowSensor
+# from wizen_plugin.sensors.workflow_sensors import WorkflowSensor
 from datetime import datetime, timedelta
 from airflow.utils.helpers import chain
 
@@ -109,7 +109,7 @@ def get_workflow(**context):
         task = model
 
     # 객체가 있는 경우 처리
-    if task != {}:
+    if task:
         context['ti'].xcom_push(key=WORKFLOWS, value=task)
         sql = f"""
         update workflow_process
