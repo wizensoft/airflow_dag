@@ -108,7 +108,7 @@ def get_workflow(**context):
         }
         task = model
 
-    # 객체가 있는 경우 처리
+    # 객체가 있는 경우 처리 
     if task:
         context['ti'].xcom_push(key=WORKFLOWS, value=task)
         sql = f"""
