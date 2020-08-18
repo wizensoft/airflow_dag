@@ -129,7 +129,7 @@ def get_workflow(**context):
     if tasks[WORKFLOWS]:
         context['ti'].xcom_push(key=WORKFLOWS, value=tasks[WORKFLOWS])
 
-    return list(task.values())
+    return list(tasks.values())
 
 def get_status(**context):
     lst = context['ti'].xcom_pull(task_ids=WORKFLOW_START_TASK, key=WORKFLOWS)
