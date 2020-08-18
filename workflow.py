@@ -18,7 +18,6 @@ from airflow.sensors.external_task_sensor import ExternalTaskSensor
 from datetime import datetime, timedelta
 from airflow.utils.helpers import chain
 from cryptography.fernet import Fernet
-fernet_key= Fernet.generate_key()
 
 # 스케줄 1분
 SCHEDULE_INTERVAL = 5
@@ -67,6 +66,10 @@ STATUS_05 = '05'
 
 # WF 마스터 정보
 def get_workflow(**context):
+    cipher  = Fernet("5EpGKTgEhjBn6cX67I20u0p2gUFznUAEbKYAh0ghlPw=")
+    cipher_text = cipher_suite.encrypt(b"dnlwps1!")
+    logging.info(f'cipher_text: {cipher_text}')
+    
     db = MySqlHook(mysql_conn_id='mariadb', schema="djob")
     # wfp = context['ti'].xcom_pull(task_ids='wf_sensor_task', key=WORKFLOW_PROCESS)
     # if wfp:
