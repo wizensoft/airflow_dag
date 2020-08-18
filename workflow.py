@@ -138,6 +138,9 @@ def get_status(**context):
     if lst:
         for row in lst:
             logging.info(f'get_status row: {row}')
+    else:
+        logging.info(f'get_status 데이터 없음: {lst}')
+    return 1
 
 def start_workflow():
     db = MySqlHook(mysql_conn_id='mariadb', schema="djob")
