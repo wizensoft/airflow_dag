@@ -129,6 +129,10 @@ def get_workflow(**context):
 
     return task
     
+def get_status(**context):
+    xcom = context['ti'].xcom_pull(task_ids='wf_status_task', key=WORKFLOWS)
+    logging.info(f'get_status: {xcom}')
+
 def start_workflow():
     db = MySqlHook(mysql_conn_id='mariadb', schema="djob")
     wp = context['ti'].xcom_pull(task_ids='wf_sensor_task', key=WORKFLOW_PROCESS)
@@ -706,8 +710,8 @@ with models.DAG("workflow", default_args=default_args, schedule_interval=timedel
     # wf_sensor = WorkflowSensor(task_id='wf_sensor_task', poke_interval=3, mode='reschedule', retry_delay=timedelta(seconds=1), dag=dag)
     # Start workflow    
     wf_start = PythonOperator(task_id=WORKFLOW_START_TASK, python_callable=get_workflow, provide_context=True, dag=dag)
-    # # Status get
-    # wf_status = BashOperator(task_id='wf_status_task',bash_command='echo wf_status get',dag=dag)
+    # Status get
+    wf_status = PythonOperator(task_id='wf_status_task',python_callable=get_status,dag=dag)
     # # End workflow    
     # wf_end = BashOperator(task_id='wf_end_task',bash_command='echo wf_end ',dag=dag)
 
@@ -777,7 +781,7 @@ with models.DAG("workflow", default_args=default_args, schedule_interval=timedel
 
     ##
     # Workflow Start
-    wf_start #>> instances >> settings >> status
+    wf_start >> wf_status #>> instances >> settings >> status
     # # 결재중이 아니면 완료 처리
     # instances >> complete
     
