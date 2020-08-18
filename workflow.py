@@ -127,7 +127,7 @@ def get_workflow(**context):
         """
         db.run(sql, autocommit=True, parameters=[task['workflow_process_id']])
 
-    # return task
+    return task
     
 def start_workflow():
     db = MySqlHook(mysql_conn_id='mariadb', schema="djob")
