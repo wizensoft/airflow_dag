@@ -123,7 +123,7 @@ def get_workflow(**context):
             set ready = 0, bookmark = 'start'
         where workflow_process_id = %s
         """
-        db.run(sql, autocommit=True, parameters=[task['workflow_process_id']])        
+        db.run(sql, autocommit=True, parameters=[str(row[0])])   
 
     # 객체가 있는 경우 처리
     if tasks[WORKFLOWS]:
