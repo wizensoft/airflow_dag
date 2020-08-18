@@ -17,6 +17,8 @@ from airflow.sensors.external_task_sensor import ExternalTaskSensor
 # from wizen_plugin.sensors.workflow_sensors import WorkflowSensor
 from datetime import datetime, timedelta
 from airflow.utils.helpers import chain
+from cryptography.fernet import Fernet
+fernet_key= Fernet.generate_key()
 
 # 스케줄 1분
 SCHEDULE_INTERVAL = 5
