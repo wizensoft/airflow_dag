@@ -32,6 +32,7 @@ default_args = {
     # 'retries': 1,
     # 'retry_delay': timedelta(minutes=1)
 }
+DISPLAY_MINUS = '----------'
 GLOBALS = 1 # 공통
 APPLICATION = 2 # 결재
 CODE = 'code'
@@ -134,12 +135,10 @@ def get_workflow(**context):
 
 def get_status(**context):
     lst = context['ti'].xcom_pull(task_ids=WORKFLOW_START_TASK, key=WORKFLOWS)
-    logging.info(f'get_status xcom: {lst}')
     if lst:
-        for row in lst:
-            logging.info(f'get_status row: {row}')
+        logging.info(f'get_status rows: {lst}')
     else:
-        logging.info(f'get_status 데이터 없음: {lst}')
+        logging.info(f'{DISPLAY_MINUS} 데이터 없음 {DISPLAY_MINUS}')
     return 1
 
 def start_workflow():
@@ -159,50 +158,58 @@ def set_error(workflow_process_id, message):
 
 # 결재 마스터 정보
 def get_instance(**context):
-    workflow = context['ti'].xcom_pull(task_ids=WORKFLOW_START_TASK, key=WORKFLOWS)
-    db = MySqlHook(mysql_conn_id='mariadb', schema="dapp")
-    instance_id = int(workflow["instance_id"])
-    sql = f"""
-    select
-        instance_id,state,form_id,parent_id,workflow_id,subject,creator_culture,creator_name,group_culture,group_name,is_urgency,is_comment,is_related_document,
-        attach_count,summary,re_draft_group_id,sub_proc_group_id,interface_id,created_date,completed_date,
-        creator_id,group_id
-    from
-        instances
-    where 
-        instance_id = %s
-    """
-    task = {}
-    rows = db.get_records(sql, parameters=[instance_id])
-    for row in rows:
-        model = {
-            'instance_id':row[0],
-            'state':row[1],
-            'form_id':row[2],
-            'parent_id':row[3],
-            'workflow_id':row[4],
-            'subject':row[5],
-            'creator_culture':row[6],
-            'creator_name':row[7],
-            'group_culture': row[8],
-            'group_name':row[9],
-            'is_urgency':row[10],
-            'is_comment':row[11],
-            'is_related_document':row[12],
-            'attach_count':row[13],
-            'summary':row[14],
-            're_draft_group_id':row[15],
-            'sub_proc_group_id':row[16],
-            'interface_id':row[17],
-            'created_date':str(row[18]),
-            'completed_date':str(row[19]),
-            'creator_id':row[20],
-            'group_id':row[21]
-        }
-        task = model
+    # 실행할 프로세스 확인
+    workflows = context['ti'].xcom_pull(task_ids=WORKFLOW_START_TASK, key=WORKFLOWS)
+    if workflows:
+        db = MySqlHook(mysql_conn_id='mariadb', schema="dapp")
+        tasks = {}
+        tasks[INSTANCES] = []
+        # logging.info(f'{DISPLAY_MINUS} {workflows} {DISPLAY_MINUS}')
+        for row in workflows:
+            # logging.info(f'{DISPLAY_MINUS} {row} {DISPLAY_MINUS}')
+            instance_id = int(row['instance_id'])
+            sql = f"""
+            select
+                instance_id,state,form_id,parent_id,workflow_id,subject,creator_culture,creator_name,group_culture,group_name,is_urgency,is_comment,is_related_document,
+                attach_count,summary,re_draft_group_id,sub_proc_group_id,interface_id,created_date,completed_date,
+                creator_id,group_id
+            from
+                instances
+            where 
+                instance_id = %s
+            """            
+            rows = db.get_records(sql, parameters=[instance_id])
+            for row in rows:
+                model = {
+                    'instance_id':row[0],
+                    'state':row[1],
+                    'form_id':row[2],
+                    'parent_id':row[3],
+                    'workflow_id':row[4],
+                    'subject':row[5],
+                    'creator_culture':row[6],
+                    'creator_name':row[7],
+                    'group_culture': row[8],
+                    'group_name':row[9],
+                    'is_urgency':row[10],
+                    'is_comment':row[11],
+                    'is_related_document':row[12],
+                    'attach_count':row[13],
+                    'summary':row[14],
+                    're_draft_group_id':row[15],
+                    'sub_proc_group_id':row[16],
+                    'interface_id':row[17],
+                    'created_date':str(row[18]),
+                    'completed_date':str(row[19]),
+                    'creator_id':row[20],
+                    'group_id':row[21]
+                }
+                tasks[INSTANCES].append(model)
 
-    context['ti'].xcom_push(key=INSTANCES, value=task)
-    return task
+            context['ti'].xcom_push(key=INSTANCES, value=tasks[INSTANCES])
+    else:
+        logging.info(f'{DISPLAY_MINUS} 실행할 프로세스 없음 {DISPLAY_MINUS}')
+    return list(tasks.values())
     
 # 코드 
 def get_codes():
@@ -720,12 +727,12 @@ with models.DAG("workflow", default_args=default_args, schedule_interval=timedel
     # Start workflow    
     wf_start = PythonOperator(task_id=WORKFLOW_START_TASK, python_callable=get_workflow, provide_context=True, dag=dag)
     # Status get
-    wf_status = PythonOperator(task_id='wf_status_task',python_callable=get_status,provide_context=True,dag=dag)
+    # wf_status = PythonOperator(task_id='wf_status_task',python_callable=get_status,provide_context=True,dag=dag)
     # # End workflow    
     # wf_end = BashOperator(task_id='wf_end_task',bash_command='echo wf_end ',dag=dag)
 
-    # # instances
-    # instances = PythonOperator(task_id=INSTANCE_TASK,python_callable=get_instance, provide_context=True, dag=dag)
+    # instances
+    instances = PythonOperator(task_id=INSTANCE_TASK,python_callable=get_instance, provide_context=True, dag=dag)
 
     # # Settings
     # settings = PythonOperator(task_id='settings_task',python_callable=get_settings, provide_context=True, dag=dag)
@@ -790,7 +797,7 @@ with models.DAG("workflow", default_args=default_args, schedule_interval=timedel
 
     ##
     # Workflow Start
-    wf_start >> wf_status #>> instances >> settings >> status
+    wf_start >> instances #>> settings >> status
     # # 결재중이 아니면 완료 처리
     # instances >> complete
     
