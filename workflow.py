@@ -135,7 +135,7 @@ def get_workflow(**context):
 def get_status(**context):
     lst = context['ti'].xcom_pull(task_ids=WORKFLOW_START_TASK, key=WORKFLOWS)
     logging.info(f'get_status xcom: {lst}')
-    if lst:
+    if lst != None:
         for row in lst:
             logging.info(f'get_status row: {row}')
     else:
