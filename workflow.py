@@ -73,10 +73,8 @@ def get_workflow(**context):
     logging.info(f'key: {key}')
     logging.info(f'cipher_text: {cipher_text}')
     logging.info(f'plain_text: {plain_text}')
-    chpher_enc = bytes(cipher_text, 'utf-8')
-    chpher_dec = cipher_suite.decrypt(bytes(chpher_enc, 'utf-8'))
-    logging.info(f'chpher_enc: {chpher_enc}')
-    # db = MySqlHook(mysql_conn_id='mariadb', schema="djob")
+
+    db = MySqlHook(mysql_conn_id='mariadb', schema="djob")
     # # wfp = context['ti'].xcom_pull(task_ids='wf_sensor_task', key=WORKFLOW_PROCESS)
     # # if wfp:
     # #     for row in wfp:
@@ -84,18 +82,18 @@ def get_workflow(**context):
     # # else:
     # #     logging.info(f'WORKFLOW_PROCESS data is empty')
 
-    # sql = """
-    # select
-    #     workflow_process_id,ngen,site_id,application_id,instance_id,schema_id,name,workflow_instance_id,state,retry_count,ready,
-    #     execute_date,created_date,bookmark,version,request,reserved,message
-    # from
-    #     workflow_process
-    # where 
-    #     ready > 0 and retry_count < 10
-    # limit 1
-    # """
-    # task = {}
-    # rows = db.get_records(sql)
+    sql = """
+    select
+        workflow_process_id,ngen,site_id,application_id,instance_id,schema_id,name,workflow_instance_id,state,retry_count,ready,
+        execute_date,created_date,bookmark,version,request,reserved,message
+    from
+        workflow_process
+    where 
+        ready > 0 and retry_count < 10
+    limit 1
+    """
+    task = {}
+    rows = db.get_records(sql)
     # for row in rows:
     #     model = {
     #         'workflow_process_id':row[0]
