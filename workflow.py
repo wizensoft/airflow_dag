@@ -207,10 +207,10 @@ def get_instance(**context):
                 tasks[INSTANCES].append(model)
 
             context['ti'].xcom_push(key=INSTANCES, value=tasks[INSTANCES])
+        return list(tasks.values())            
     else:
         logging.info(f'{DISPLAY_MINUS} 실행할 프로세스 없음 {DISPLAY_MINUS}')
-    return list(tasks.values())
-    
+        return None
 # 코드 
 def get_codes():
     logging.info('get_codes')
