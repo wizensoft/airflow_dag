@@ -133,8 +133,9 @@ def get_workflow(**context):
 
 def get_status(**context):
     lst = context['ti'].xcom_pull(task_ids=WORKFLOW_START_TASK, key=WORKFLOWS)
-    for row in lst:
-        logging.info(f'get_status row: {row}')
+    if lst:
+        for row in lst:
+            logging.info(f'get_status row: {row}')
 
 def start_workflow():
     db = MySqlHook(mysql_conn_id='mariadb', schema="djob")
