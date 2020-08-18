@@ -19,7 +19,7 @@ from datetime import datetime, timedelta
 from airflow.utils.helpers import chain
 from cryptography.fernet import Fernet
 
-# 스케줄 1분
+# 스케줄 = 초'
 SCHEDULE_INTERVAL = 5
 default_args = {
     'owner': 'annguk',
@@ -66,13 +66,13 @@ STATUS_05 = '05'
 
 # WF 마스터 정보
 def get_workflow(**context):
-    key = "5EpGKTgEhjBn6cX67I20u0p2gUFznUAEbKYAh0ghlPw=" #Fernet.generate_key()
-    cipher_suite  = Fernet(key)
-    cipher_text = cipher_suite.encrypt(b"dnlwps1!")
-    plain_text = cipher_suite.decrypt(cipher_text)
-    logging.info(f'key: {key}')
-    logging.info(f'cipher_text: {cipher_text}')
-    logging.info(f'plain_text: {plain_text}')
+    # key = "5EpGKTgEhjBn6cX67I20u0p2gUFznUAEbKYAh0ghlPw=" #Fernet.generate_key()
+    # cipher_suite  = Fernet(key)
+    # cipher_text = cipher_suite.encrypt(b"dnlwps1!")
+    # plain_text = cipher_suite.decrypt(cipher_text)
+    # logging.info(f'key: {key}')
+    # logging.info(f'cipher_text: {cipher_text}')
+    # logging.info(f'plain_text: {plain_text}')
 
     db = MySqlHook(mysql_conn_id='mariadb', schema="djob")
     # # wfp = context['ti'].xcom_pull(task_ids='wf_sensor_task', key=WORKFLOW_PROCESS)
@@ -692,7 +692,7 @@ def get_status_00(**context):
     # set_sign_activity(instance_id, ET.tostring(root), context)
     return "annguk"
 
-with models.DAG("workflow", default_args=default_args, schedule_interval=timedelta(seconds=3)) as dag:
+with models.DAG("workflow", default_args=default_args, schedule_interval=timedelta(seconds=SCHEDULE_INTERVAL)) as dag:
     # Watch workflow process
     # wf_sensor = ExternalTaskSensor(
     #     task_id='wf_sensor_task',
