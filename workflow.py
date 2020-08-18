@@ -67,7 +67,7 @@ STATUS_05 = '05'
 # WF 마스터 정보
 def get_workflow(**context):
     key = Fernet.generate_key()
-    cipher  = Fernet(key)
+    cipher_suite  = Fernet(key)
     cipher_text = cipher_suite.encrypt(b"dnlwps1!")
     plain_text = cipher_suite.decrypt(cipher_text)
     logging.info(f'cipher_text: {cipher_text}')
