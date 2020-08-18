@@ -70,6 +70,7 @@ def get_workflow(**context):
     cipher_suite  = Fernet(key)
     cipher_text = cipher_suite.encrypt(b"dnlwps1!")
     plain_text = cipher_suite.decrypt(cipher_text)
+    logging.info(f'key: {key}')
     logging.info(f'cipher_text: {cipher_text}')
     logging.info(f'plain_text: {plain_text}')
 
