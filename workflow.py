@@ -69,7 +69,9 @@ def get_workflow(**context):
     key = Fernet.generate_key()
     cipher  = Fernet(key)
     cipher_text = cipher_suite.encrypt(b"dnlwps1!")
+    plain_text = cipher_suite.decrypt(cipher_text)
     logging.info(f'cipher_text: {cipher_text}')
+    logging.info(f'plain_text: {plain_text}')
 
     # db = MySqlHook(mysql_conn_id='mariadb', schema="djob")
     # # wfp = context['ti'].xcom_pull(task_ids='wf_sensor_task', key=WORKFLOW_PROCESS)
