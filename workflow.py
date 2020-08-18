@@ -21,6 +21,7 @@ from cryptography.fernet import Fernet
 
 # 스케줄 = 초'
 SCHEDULE_INTERVAL = 5
+SCHEDULE_LIMIT = 10
 default_args = {
     'owner': 'annguk',
     'depends_on_past': False,
@@ -82,7 +83,7 @@ def get_workflow(**context):
     # # else:
     # #     logging.info(f'WORKFLOW_PROCESS data is empty')
 
-    sql = """
+    sql = f"""
     select
         workflow_process_id,ngen,site_id,application_id,instance_id,schema_id,name,workflow_instance_id,state,retry_count,ready,
         execute_date,created_date,bookmark,version,request,reserved,message
@@ -90,9 +91,10 @@ def get_workflow(**context):
         workflow_process
     where 
         ready > 0 and retry_count < 10
-    limit 1
+    limit {SCHEDULE_LIMIT}
     """
-    task = {}
+    tasks = {}
+    tasks[WORKFLOWS] = []
     rows = db.get_records(sql)
     for row in rows:
         model = {
@@ -115,23 +117,24 @@ def get_workflow(**context):
             'reserved':row[16],
             'message':row[17]
         }
-        task = model
-
-    # 객체가 있는 경우 처리
-    if task:
-        context['ti'].xcom_push(key=WORKFLOWS, value=task)
+        tasks[WORKFLOWS].append(model)
         sql = f"""
         update workflow_process
             set ready = 0, bookmark = 'start'
         where workflow_process_id = %s
         """
-        db.run(sql, autocommit=True, parameters=[task['workflow_process_id']])
+        db.run(sql, autocommit=True, parameters=[task['workflow_process_id']])        
 
-    return task
+    # 객체가 있는 경우 처리
+    if tasks[WORKFLOWS]:
+        context['ti'].xcom_push(key=WORKFLOWS, value=tasks[WORKFLOWS])
+
+    return list(task.values())
 
 def get_status(**context):
-    xcom = context['ti'].xcom_pull(task_ids=WORKFLOW_START_TASK, key=WORKFLOWS)
-    logging.info(f'get_status: {xcom}')
+    lst = context['ti'].xcom_pull(task_ids=WORKFLOW_START_TASK, key=WORKFLOWS)
+    for row in lst:
+        logging.info(f'get_status row: {row}')
 
 def start_workflow():
     db = MySqlHook(mysql_conn_id='mariadb', schema="djob")
