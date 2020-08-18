@@ -125,6 +125,7 @@ def get_workflow(**context):
         """
         db.run(sql, autocommit=True, parameters=[str(row[0])])   
 
+    logging.info(f'check: {tasks[WORKFLOWS]}')
     # 객체가 있는 경우 처리
     if tasks[WORKFLOWS]:
         context['ti'].xcom_push(key=WORKFLOWS, value=tasks[WORKFLOWS])
