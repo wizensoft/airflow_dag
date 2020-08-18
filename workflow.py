@@ -23,7 +23,7 @@ SCHEDULE_INTERVAL = 5
 default_args = {
     'owner': 'annguk',
     'depends_on_past': False,
-    'start_date': datetime(2020, 8, 14),
+    'start_date': datetime(2020, 8, 18),
     'email': ['koreablaster@wizensoft.com'],
     'email_on_failure': False,
     'email_on_retry': False,
