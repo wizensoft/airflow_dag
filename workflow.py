@@ -96,24 +96,24 @@ def get_workflow(**context):
     rows = db.get_records(sql)
     for row in rows:
         model = {
-            'workflow_process_id':row[0]
-            # 'ngen':row[1],
-            # 'site_id':row[2],
-            # 'application_id':row[3],
-            # 'instance_id':row[4],
-            # 'schema_id':row[5],
-            # 'name':row[6],
-            # 'workflow_instance_id':row[7],
-            # 'state':row[8],
-            # 'retry_count':row[9],
-            # 'ready':row[10],
-            # 'execute_date':str(row[11]),
-            # 'created_date':str(row[12]),
-            # 'bookmark':row[13],
-            # 'version':row[14],
-            # 'request':row[15],
-            # 'reserved':row[16],
-            # 'message':row[17]
+            'workflow_process_id':row[0],
+            'ngen':row[1],
+            'site_id':row[2],
+            'application_id':row[3],
+            'instance_id':row[4],
+            'schema_id':row[5],
+            'name':row[6],
+            'workflow_instance_id':row[7],
+            'state':row[8],
+            'retry_count':row[9],
+            'ready':row[10],
+            'execute_date':str(row[11]),
+            'created_date':str(row[12]),
+            'bookmark':row[13],
+            'version':row[14],
+            'request':row[15],
+            'reserved':row[16],
+            'message':row[17]
         }
         task = model
 
