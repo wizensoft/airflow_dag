@@ -128,9 +128,9 @@ def get_workflow(**context):
         db.run(sql, autocommit=True, parameters=[task['workflow_process_id']])
 
     return task
-    
+
 def get_status(**context):
-    xcom = context['ti'].xcom_pull(task_ids='wf_status_task', key=WORKFLOWS)
+    xcom = context['ti'].xcom_pull(task_ids=WORKFLOW_START_TASK, key=WORKFLOWS)
     logging.info(f'get_status: {xcom}')
 
 def start_workflow():
@@ -711,7 +711,7 @@ with models.DAG("workflow", default_args=default_args, schedule_interval=timedel
     # Start workflow    
     wf_start = PythonOperator(task_id=WORKFLOW_START_TASK, python_callable=get_workflow, provide_context=True, dag=dag)
     # Status get
-    wf_status = PythonOperator(task_id='wf_status_task',python_callable=get_status,dag=dag)
+    wf_status = PythonOperator(task_id='wf_status_task',python_callable=get_status,provide_context=True,dag=dag)
     # # End workflow    
     # wf_end = BashOperator(task_id='wf_end_task',bash_command='echo wf_end ',dag=dag)
 
