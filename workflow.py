@@ -18,14 +18,16 @@ from airflow.sensors.external_task_sensor import ExternalTaskSensor
 from datetime import datetime, timedelta
 from airflow.utils.helpers import chain
 from cryptography.fernet import Fernet
+from airflow.operators.subdag_operator import SubDagOperator
+from wizen_plugin.subdag.signers_subdag import signers_subdag
 
 # 스케줄 = 초'
-SCHEDULE_INTERVAL = 5
+SCHEDULE_INTERVAL = 30
 SCHEDULE_LIMIT = 10
 default_args = {
     'owner': 'annguk',
     'depends_on_past': False,
-    'start_date': datetime(2020, 8, 18),
+    'start_date': datetime(2020, 8, 19),
     'email': ['koreablaster@wizensoft.com'],
     'email_on_failure': False,
     'email_on_retry': False,
@@ -38,8 +40,9 @@ APPLICATION = 2 # 결재
 CODE = 'code'
 WORKFLOW_STATE = 'state'
 # 테스크
-WORKFLOW_START_TASK = 'wf_start_task'
+WORKFLOW_START_TASK = 'start_task'
 INSTANCE_TASK = 'instances_task'
+SETTING_TASK = 'settings_task'
 # WF 북마크
 BOOKMARK_START = 'start'
 BOOKMARK_INSTANCE = 'instance'
@@ -95,7 +98,7 @@ def get_workflow(**context):
     limit {SCHEDULE_LIMIT}
     """
     tasks = {}
-    tasks[WORKFLOWS] = []
+    tasks[WORKFLOW_START_TASK] = []
     rows = db.get_records(sql)
     for row in rows:
         model = {
@@ -118,7 +121,7 @@ def get_workflow(**context):
             'reserved':row[16],
             'message':row[17]
         }
-        tasks[WORKFLOWS].append(model)
+        tasks[WORKFLOW_START_TASK].append(model)
         sql = f"""
         update workflow_process
             set ready = 0, bookmark = 'start'
@@ -126,24 +129,16 @@ def get_workflow(**context):
         """
         db.run(sql, autocommit=True, parameters=[str(row[0])])   
 
-    logging.info(f'check: {tasks[WORKFLOWS]}')
+    logging.info(f'check: {tasks[WORKFLOW_START_TASK]}')
     # 객체가 있는 경우 처리
-    if tasks[WORKFLOWS]:
-        context['ti'].xcom_push(key=WORKFLOWS, value=tasks[WORKFLOWS])
+    if tasks[WORKFLOW_START_TASK]:
+        context['ti'].xcom_push(key=WORKFLOW_START_TASK, value=tasks[WORKFLOW_START_TASK])
 
     return list(tasks.values())
 
-def get_status(**context):
-    lst = context['ti'].xcom_pull(task_ids=WORKFLOW_START_TASK, key=WORKFLOWS)
-    if lst:
-        logging.info(f'get_status rows: {lst}')
-    else:
-        logging.info(f'{DISPLAY_MINUS} 데이터 없음 {DISPLAY_MINUS}')
-    return 1
-
 def start_workflow():
     db = MySqlHook(mysql_conn_id='mariadb', schema="djob")
-    wp = context['ti'].xcom_pull(task_ids='wf_sensor_task', key=WORKFLOW_PROCESS)
+    wp = context['ti'].xcom_pull(task_ids='wf_sensor_task', key=WORKFLOW_START_TASK)
 
 
 # 에러 등록
@@ -159,14 +154,14 @@ def set_error(workflow_process_id, message):
 # 결재 마스터 정보
 def get_instance(**context):
     # 실행할 프로세스 확인
-    workflows = context['ti'].xcom_pull(task_ids=WORKFLOW_START_TASK, key=WORKFLOWS)
+    workflows = context['ti'].xcom_pull(task_ids=WORKFLOW_START_TASK, key=WORKFLOW_START_TASK)
     if workflows:
         db = MySqlHook(mysql_conn_id='mariadb', schema="dapp")
         tasks = {}
-        tasks[INSTANCES] = []
-        # logging.info(f'{DISPLAY_MINUS} {workflows} {DISPLAY_MINUS}')
+        tasks[INSTANCE_TASK] = []
+        logging.info(f'{DISPLAY_MINUS} {workflows} {DISPLAY_MINUS}')
         for row in workflows:
-            # logging.info(f'{DISPLAY_MINUS} {row} {DISPLAY_MINUS}')
+            logging.info(f'{DISPLAY_MINUS} {row} {DISPLAY_MINUS}')
             instance_id = int(row['instance_id'])
             sql = f"""
             select
@@ -204,16 +199,36 @@ def get_instance(**context):
                     'creator_id':row[20],
                     'group_id':row[21]
                 }
-                tasks[INSTANCES].append(model)
+                tasks[INSTANCE_TASK].append(model)
 
-            context['ti'].xcom_push(key=INSTANCES, value=tasks[INSTANCES])
-        return list(tasks.values())            
+        if tasks[INSTANCE_TASK]:
+            context['ti'].xcom_push(key=INSTANCE_TASK, value=tasks[INSTANCE_TASK])
+            return list(tasks.values())
     else:
         logging.info(f'{DISPLAY_MINUS} 실행할 프로세스 없음 {DISPLAY_MINUS}')
         return None
+
+# 설정 마스터
+def get_settings(**context):
+    codes = get_codes()
+
+    instances = context['ti'].xcom_pull(task_ids=INSTANCE_TASK, key=INSTANCE_TASK)
+    if instances:
+        for row in instances:
+            logging.info(f'get_settings instances {row}')
+    else:
+        logging.info(f'{DISPLAY_MINUS} 데이터 없음 {DISPLAY_MINUS}')
 # 코드 
 def get_codes():
     logging.info('get_codes')
+
+def get_status(**context):
+    instances = context['ti'].xcom_pull(task_ids=INSTANCE_TASK, key=INSTANCE_TASK)
+    if instances:
+        logging.info(f'get_status rows: {instances}')
+    else:
+        logging.info(f'{DISPLAY_MINUS} 데이터 없음 {DISPLAY_MINUS}')
+    return 1    
 
 # 결재 예정 정보
 def get_sign_activity(instance_id, context):
@@ -591,18 +606,11 @@ def set_sign_activity(instance_id, contents, context):
         instance_id = %s
     """
     db.run(sql, autocommit=True, parameters=[contents, instance_id])
-
-# 설정 마스터
-def get_settings(**context):
-    codes = get_codes()
-
-    instance = context['ti'].xcom_pull(task_ids=INSTANCE_TASK, key=INSTANCE)
-
-    logging.info(f'get_settings instances {instance}')
+    
 
 # WF 상태
 def branch_status(**context):
-    workflow = context['ti'].xcom_pull(task_ids=WORKFLOW_START_TASK, key=WORKFLOWS)
+    workflow = context['ti'].xcom_pull(task_ids=WORKFLOW_START_TASK, key=WORKFLOW_START_TASK)
     if workflow["state"] == STATUS_00:
         return STATUS_00
     else:
@@ -652,7 +660,7 @@ def next_activity(lst, context):
 # 기안
 def get_status_00(**context):
     try:
-        workflow = context['ti'].xcom_pull(task_ids=WORKFLOW_START_TASK, key=WORKFLOWS)
+        workflow = context['ti'].xcom_pull(task_ids=WORKFLOW_START_TASK, key=WORKFLOW_START_TASK)
         instance_id = int(workflow["instance_id"])    
         sign_activity = get_sign_activity(instance_id, context)
         sql = ''
@@ -734,10 +742,12 @@ with models.DAG("workflow", default_args=default_args, schedule_interval=timedel
     # instances
     instances = PythonOperator(task_id=INSTANCE_TASK,python_callable=get_instance, provide_context=True, dag=dag)
 
-    # # Settings
-    # settings = PythonOperator(task_id='settings_task',python_callable=get_settings, provide_context=True, dag=dag)
+    # Setting
+    settings = PythonOperator(task_id=SETTING_TASK,python_callable=get_settings, provide_context=True, dag=dag)
 
-    # # Status: 상태
+    # Status: 상태
+    signers_subdag = SubDagOperator(task_id='signers_subdag',subdag=signers_subdag(dag.dag_id, 'signers_subdag', "'{{ ti.xcom_pull(task_ids='instances_task',key='instances_task') }}'", default_args),default_args=default_args,dag=dag)
+
     # status = PythonOperator(task_id='status_task',python_callable=branch_status, provide_context=True, dag=dag)
     # # 00: 기안
     # status_00 = PythonOperator(task_id='status_00_task',python_callable=get_status_00, provide_context=True, dag=dag)
@@ -797,7 +807,7 @@ with models.DAG("workflow", default_args=default_args, schedule_interval=timedel
 
     ##
     # Workflow Start
-    wf_start >> instances #>> settings >> status
+    wf_start >> instances >> settings >> signers_subdag
     # # 결재중이 아니면 완료 처리
     # instances >> complete
     
