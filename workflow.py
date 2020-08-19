@@ -136,10 +136,10 @@ def get_workflow(**context):
 
     return list(tasks.values())
 
-def start_workflow():
-    db = MySqlHook(mysql_conn_id='mariadb', schema="djob")
-    wp = context['ti'].xcom_pull(task_ids='wf_sensor_task', key=WORKFLOW_START_TASK)
-
+def wf_status(**context):
+    wf = context['ti'].xcom_pull(task_ids=WORKFLOW_START_TASK, key=WORKFLOW_START_TASK)
+    if not wf:
+        logging.info(f'{DISPLAY_MINUS} 실행할 프로세스 없음 {DISPLAY_MINUS}')
 
 # 에러 등록
 def set_error(workflow_process_id, message):
@@ -807,7 +807,7 @@ with models.DAG("workflow", default_args=default_args, schedule_interval=timedel
 
     ##
     # Workflow Start
-    wf_start >> instances >> settings >> signers_subdag
+    wf_start >> [wf_status, instances] >> settings >> signers_subdag
     # # 결재중이 아니면 완료 처리
     # instances >> complete
     
