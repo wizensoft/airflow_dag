@@ -19,7 +19,7 @@ BOOKMARK_START = 'start'
 # Define the DAG
 dag = DAG(dag_id='workflow_controller',
           default_args={"owner": "annguk", "start_date": datetime(2020, 9, 1)},
-          schedule_interval=timedelta(seconds=10))
+          schedule_interval=timedelta(seconds=2))
 
 def conditionally_trigger(context, dag_run_obj):
     # c_p =context['params']['condition_param']
