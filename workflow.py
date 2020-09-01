@@ -332,8 +332,8 @@ def get_boxes(context):
     os.system(f'airflow variables --set boxes "' + result + '"')
     # return list(tasks.values())
 
-
-with models.DAG("workflow", default_args=default_args, schedule_interval=timedelta(seconds=SCHEDULE_INTERVAL)) as dag:
+# timedelta(seconds=SCHEDULE_INTERVAL))
+with models.DAG("workflow", default_args=default_args, schedule_interval=None) as dag:
     # Watch workflow process
     # wf_sensor = ExternalTaskSensor(
     #     task_id='wf_sensor_task',
