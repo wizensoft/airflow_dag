@@ -24,7 +24,7 @@ from cryptography.fernet import Fernet
 from airflow.operators.subdag_operator import SubDagOperator
 from wizen_plugin.operators.signers_operator import SignersOperator
 # from wizen_plugin.subdag.signers_subdag import signers_subdag
-
+ 
 # 스케줄 = 초'
 SCHEDULE_INTERVAL = 30
 SCHEDULE_LIMIT = 10
