@@ -29,7 +29,7 @@ t1 = BashOperator(
 
 # Task 2
 def my_python_function():
-    now = datetime.now()
+    now = datetime.utcnow()
     response = 'This function ran at ' + str(now)
     return response
 

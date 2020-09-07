@@ -83,73 +83,22 @@ STATUS_05 = '05'
 # 북마크
 BOOKMARK_START = 'start'
 
-def get_workflow(**context):
+def receive_workflow_controller(**context):
     """
     WF 마스터 정보
     """
-    # key = "5EpGKTgEhjBn6cX67I20u0p2gUFznUAEbKYAh0ghlPw=" #Fernet.generate_key()
-    # cipher_suite  = Fernet(key)
-    # cipher_text = cipher_suite.encrypt(b"dnlwps1!")
-    # plain_text = cipher_suite.decrypt(cipher_text)
-    # logging.info(f'key: {key}')
-    # logging.info(f'cipher_text: {cipher_text}')
-    # logging.info(f'plain_text: {plain_text}')
 
-    db = MySqlHook(mysql_conn_id='mariadb', schema="djob")
-    # # wfp = context['ti'].xcom_pull(task_ids='wf_sensor_task', key=WORKFLOW_PROCESS)
-    # # if wfp:
-    # #     for row in wfp:
-    # #         logging.info(f'wfp row {row}')
-    # # else:
-    # #     logging.info(f'WORKFLOW_PROCESS data is empty')
+    lst = context["dag_run"].conf["workflows"]
+    
+    # tasks = {}
+    # tasks[WORKFLOW_START_TASK] = []
 
-    sql = f"""
-    select
-        workflow_process_id,ngen,site_id,application_id,instance_id,schema_id,name,workflow_instance_id,state,retry_count,ready,
-        execute_date,created_date,bookmark,version,request,reserved,message
-    from
-        workflow_process
-    where 
-        ready > 0 and retry_count < 10
-    limit {SCHEDULE_LIMIT}
-    """
-    tasks = {}
-    tasks[WORKFLOW_START_TASK] = []
-    rows = db.get_records(sql)
-    for row in rows:
-        model = {
-            'workflow_process_id':row[0],
-            'ngen':row[1],
-            'site_id':row[2],
-            'application_id':row[3],
-            'instance_id':row[4],
-            'schema_id':row[5],
-            'name':row[6],
-            'workflow_instance_id':row[7],
-            'state':row[8],
-            'retry_count':row[9],
-            'ready':row[10],
-            'execute_date':str(row[11]),
-            'created_date':str(row[12]),
-            'bookmark':row[13],
-            'version':row[14],
-            'request':row[15],
-            'reserved':row[16],
-            'message': ''
-        }
-        tasks[WORKFLOW_START_TASK].append(model)
-        sql = f"""
-        update workflow_process
-            set ready = 0, bookmark = '{BOOKMARK_START}'
-        where workflow_process_id = %s
-        """
-        db.run(sql, autocommit=True, parameters=[str(row[0])])   
-
-    logging.info(f'check: {tasks[WORKFLOW_START_TASK]}')
+    logging.info(f'lst: {lst}')
     # 객체가 있는 경우 처리
-    if tasks[WORKFLOW_START_TASK]:
-        # context['ti'].xcom_push(key=WORKFLOW_START_TASK, value=tasks[WORKFLOW_START_TASK])
-        return list(tasks.values())
+    if lst:
+        # context['ti'].xcom_push(key=WORKFLOW_START_TASK, value=tasks[WORKFLOW_START_TASK])        
+        result = json.loads(lst.replace("'","\""))
+        return result
 
 def get_status(**context):    
     """
@@ -184,12 +133,13 @@ def get_instance(**context):
     # 실행할 프로세스 확인
     workflows = context['ti'].xcom_pull(task_ids=WORKFLOW_START_TASK)
     if workflows:
+        logging.info(f'workflows: {workflows}')
         db = MySqlHook(mysql_conn_id='mariadb', schema="dapp")
         tasks = {}
         tasks[INSTANCE_TASK] = []
         tasks[INSTANCE_COMPLETED_TASK] = []
         # logging.info(f'workflows: {DISPLAY_MINUS} {workflows} {DISPLAY_MINUS}')
-        for wf in workflows[0]:
+        for wf in workflows:
             logging.info(f'wf: {DISPLAY_MINUS} {wf} {DISPLAY_MINUS}')
             # logging.info(f'instance_id: {DISPLAY_MINUS} {wf["instance_id"]} {DISPLAY_MINUS}')
             instance_id = int(wf['instance_id'])
@@ -347,7 +297,7 @@ with models.DAG("workflow", default_args=default_args, schedule_interval=None) a
     
     # wf_sensor = WorkflowSensor(task_id='wf_sensor_task', poke_interval=3, mode='reschedule', retry_delay=timedelta(seconds=1), dag=dag)
     # Start workflow    
-    wf_start = PythonOperator(task_id=WORKFLOW_START_TASK, python_callable=get_workflow, provide_context=True, dag=dag)
+    wf_start = PythonOperator(task_id=WORKFLOW_START_TASK, python_callable=receive_workflow_controller, provide_context=True, dag=dag)
     # Status get
     wf_status = BranchPythonOperator(task_id=WORKFLOW_STATUS_TASK,python_callable=get_status,provide_context=True,dag=dag)
     # wf_status = PythonOperator(task_id='wf_status',python_callable=get_status,provide_context=True,dag=dag)
@@ -363,7 +313,7 @@ with models.DAG("workflow", default_args=default_args, schedule_interval=None) a
     settings = PythonOperator(task_id=SETTING_TASK,python_callable=get_settings, provide_context=True, dag=dag)
 
     # Status: 상태 '{{ ti.xcom_pull(task_ids='load_config', dag_id='workflow' }}'
-    signers = SignersOperator(task_id=SIGNER_TASK, wf_start_task=WORKFLOW_START_TASK, instance_task=INSTANCE_TASK, setting_task=SETTING_TASK, provide_context=True, dag=dag)
+    signers = SignersOperator(task_id=SIGNER_TASK, wf_start_task=WORKFLOW_START_TASK, provide_context=True, dag=dag)
     
     # 진행중인 프로세스 이벤트 처리
     signers_ing = PythonOperator(task_id=SIGNER_ING_TASK,python_callable=get_signers_ing,provide_context=True,dag=dag)    
@@ -436,7 +386,7 @@ with models.DAG("workflow", default_args=default_args, schedule_interval=None) a
     wf_status >> instances >> instances_status >> wf_end
     # 프로세스 실행
     instances_status >> settings >> signers >> [signers_ing, signers_completed]
-    # # 결재중이 아니면 완료 처리
+    # 결재중이 아니면 완료 처리
     # instances >> complete
     
     # # 결재상태
@@ -513,9 +463,9 @@ with models.DAG("workflow", default_args=default_args, schedule_interval=None) a
 #         group['culture'],
 #         doc.find('group_id').text,
 #         group['name'],
-#         datetime.now(),
-#         datetime.now(),
-#         datetime.now()])
+#         datetime.utcnow(),
+#         datetime.utcnow(),
+#         datetime.utcnow()])
 
 
 # # 결재선 사용자 등록

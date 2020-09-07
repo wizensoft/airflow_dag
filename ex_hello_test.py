@@ -34,7 +34,7 @@ class TestDagIntegrity(unittest.TestCase):
         downstream_task_ids = list(map(lambda task: task.task_id, python_task.upstream_list)) 
         self.assertEqual(len(downstream_task_ids), 1)
 
-        ti = TaskInstance(task=python_task, execution_date=datetime.now())
+        ti = TaskInstance(task=python_task, execution_date=datetime.utcnow())
         result = python_task.execute(ti.get_template_context())
         self.assertEqual(result, 'Hello Wolrd')
 

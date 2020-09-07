@@ -20,7 +20,7 @@ class TestDagIntegrity(unittest.TestCase):
         instances_task = dag.get_task('instances_task')
         settings_task = dag.get_task('settings_task')
 
-        execution_date = datetime.now()
+        execution_date = datetime.utcnow()
 
         wf_start_task_ti = TaskInstance(task=wf_start_task, execution_date=execution_date)
         wf_start_task_context = wf_start_task_ti.get_template_context()
